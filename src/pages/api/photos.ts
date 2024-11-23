@@ -10,7 +10,7 @@ export const POST: APIRoute = async ({ request }) => {
 
     const blob = await request.blob();
     console.log(blob);
-    const blobStore = getStore('wedding_photos');
+    const blobStore = getStore('bg_wedding_photos');
     const key = randomUUID();
     await blobStore.set(key, blob);
     console.log(`Stored shape "${key}"`);

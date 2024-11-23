@@ -1,21 +1,97 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import ContextAlert from '../components/ContextAlert.astro';
-import Markdown from '../components/Markdown.astro';
+import { Image } from 'astro:assets';
+import miyus_fall_landscape from '../assets/miyus_fall_landscape.jpg';
 
-const explainer = `
-An Astro website can go way beyond static pages - on the right platform.
+import { getStore } from '@netlify/blobs';
 
-Netlify supports not only [Streaming SSR](https://docs.astro.build/en/guides/server-side-rendering/#html-streaming) and fast [Edge Middleware](https://docs.astro.build/en/guides/middleware/), but also [on-demand revalidation](https://www.netlify.com/blog/cache-tags-and-purge-api-on-netlify/) and [stale-while-revalidate](https://www.netlify.com/blog/swr-and-fine-grained-cache-control/). 
-Any page or data can be rebuilt only when needed, without site visitors ever getting a performance hit.
-`;
+//Get all images from the store
+/* const store = getStore('bg_wedding_photos');
+const imageList = await store.list();
+console.log(imageList);
+
+const imageUrls = imageList.blobs
+    .map((blob) => {
+        const image = store
+            .get(blob.key, { type: 'blob' })
+            .then((image) => {
+                return URL.createObjectURL(image);
+            })
+            .catch((error) => {
+                console.error(error);
+            });
+        return image;
+    })
+    .map((image) => image); */
 ---
 
-<Layout title="Welcome to Astro.">
-    <ContextAlert class="mb-4" />
-    <h1 class="mb-10">Netlify Platform Starter for Astro</h1>
-    <Markdown content={explainer} class="text-lg mb-10" />
-    <p class="mb-8">
-        <a href="https://docs.netlify.com/frameworks/astro/" class="btn btn-lg btn-primary sm:btn-wide">Read the Docs</a>
-    </p>
+<Layout title="Wedding Photos">
+    <figure>
+        <Image src={miyus_fall_landscape} alt="Mia very happy" class="w-full" />
+    </figure>
+    <p class="text-center pt-4">Thank you for coming to our wedding celebration. </p>
+    <p class="text-center pt-1 pb-2"> Pease share the best photos you took from the event</p>
+
+    <form class="flex justify-between items-center">
+        <input type="file" id="file" name="file" accept="image/*" required multiple class="w-64" />
+        <button type="submit" class="bg-[--orange-light] border-[0.5px] border-[--brown] rounded-md py-1 px-2 text-orange-950">Upload</button>
+    </form>
+
+    <h2 class="text-center pt-5">Gallery</h2>
+
+    <!--  <div id="Gallery">
+        {imageUrls.map((url) => <img src={url} alt="Wedding photo" />)}
+    </div> -->
 </Layout>
+
+<script>
+    document.querySelector('form').addEventListener('submit', function (event) {
+        event.preventDefault();
+        const fileInput = document.getElementById('file') as HTMLInputElement;
+        for (let i = 0; i < fileInput.files.length; i++) {
+            const file = fileInput.files[i];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const arrayBuffer = e.target.result;
+                    const blob = new Blob([arrayBuffer], { type: file.type });
+
+                    uploadBlob(blob).then(() => {
+                        console.log('Image uploaded');
+                    });
+                };
+                reader.readAsArrayBuffer(file);
+            }
+        }
+    });
+
+    const uploadBlob = async (blob: Blob) => {
+        const response = await fetch('/api/photos', {
+            method: 'POST',
+            body: blob
+        });
+        const data = await response.json();
+        if (data.message) {
+            return data;
+        }
+    };
+
+    const requestImages = async (imageId) => {
+        const response = await fetch(`/api/photos?key=${imageId}`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        const data = await response.blob();
+        console.log('blob data');
+        console.log(data);
+
+        //Display the image
+        if (data) {
+            const image = document.createElement('img');
+            image.src = URL.createObjectURL(data);
+            image.width = 200;
+            image.height = 200;
+            document.getElementById('image').appendChild(image);
+        }
+    };
+</script>

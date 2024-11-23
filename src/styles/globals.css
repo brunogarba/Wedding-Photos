@@ -15,13 +15,23 @@
         @apply underline transition hover:opacity-80;
     }
 
-    pre {
-        @apply p-6 overflow-x-auto rounded-lg;
+    .libre-baskerville-regular {
+        font-family: 'Libre Baskerville', serif;
+        font-weight: 400;
+        font-style: normal;
     }
 
-    :not(pre) > code {
-        @apply px-1 py-0.5 font-mono rounded bg-[#1f1f1f] text-[#F67280];
-        font-size: 0.9em;
+    .qwitcher-grypen-regular {
+        font-family: 'Qwitcher Grypen', serif;
+        font-weight: 400;
+        font-style: normal;
+    }
+
+    :root {
+        --orange-light: #f0934b;
+        --orange: #df6633;
+        --brown: #714533;
+        --white-bg: #f2eee9;
     }
 }
 

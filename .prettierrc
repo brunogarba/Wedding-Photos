@@ -3,11 +3,22 @@
     "singleQuote": true,
     "trailingComma": "none",
     "tabWidth": 4,
+    "htmlWhitespaceSensitivity": "ignore",
+    "preserveWhitespace": true,
+    "plugins": ["prettier-plugin-astro"],
     "overrides": [
         {
             "files": ["*.md", "*.mdx", "*.yaml"],
             "options": {
                 "tabWidth": 2
+            }
+        },
+        {
+            "files": "*.astro",
+            "options": {
+                "parser": "astro",
+                "htmlWhitespaceSensitivity": "strict",
+                "bracketSameLine": false
             }
         }
     ]

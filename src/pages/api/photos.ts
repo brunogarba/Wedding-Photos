@@ -50,6 +50,15 @@ export const GET: APIRoute = async (context) => {
 export const DELETE: APIRoute = async (context) => {
     try {
         const blobStore = await getStore('bg_wedding_photos').list();
+        const token = context.request.headers.get('Authorization');
+        if (token !== '&sN@vKLgiT3*EEFU') {
+            return new Response(
+                JSON.stringify({
+                    error: 'Unauthorized'
+                }),
+                { status: 401 }
+            );
+        }
 
         for (const blob of blobStore.blobs) {
             await getStore('bg_wedding_photos').delete(blob.key);

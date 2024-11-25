@@ -9,14 +9,15 @@ export const POST: APIRoute = async ({ request }) => {
     if (uploadDisabled) throw new Error('Sorry, uploads are disabled');
 
     const blob = await request.blob();
-    console.log(blob);
     const blobStore = getStore('bg_wedding_photos');
     const key = randomUUID();
     await blobStore.set(key, blob);
-    console.log(`Stored shape "${key}"`);
+
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
     return new Response(
         JSON.stringify({
-            message: `Stored shape "${key}"`,
+            message: `Stored image "${key}"`,
             key: key
         })
     );
@@ -27,17 +28,38 @@ export const GET: APIRoute = async (context) => {
         const urlParams = new URL(context.url);
         const key = urlParams.searchParams.get('key');
         if (!key) {
-            return new Response('Bad Request', { status: 400 });
+            const keyArray = (await getStore('bg_wedding_photos').list()).blobs.map((blob) => blob.key);
+            return new Response(JSON.stringify({ keys: keyArray }));
         }
 
-        console.log(key);
-
-        const blobStore = getStore('wedding_photos');
+        const blobStore = getStore('bg_wedding_photos');
         const blob = await blobStore.get(key, { type: 'blob' });
 
-        console.log(blob);
-
         return new Response(blob);
+    } catch (e) {
+        console.error(e);
+        return new Response(
+            JSON.stringify({
+                keys: [],
+                error: 'Failed listing blobs'
+            })
+        );
+    }
+};
+
+export const DELETE: APIRoute = async (context) => {
+    try {
+        const blobStore = await getStore('bg_wedding_photos').list();
+
+        for (const blob of blobStore.blobs) {
+            await getStore('bg_wedding_photos').delete(blob.key);
+        }
+
+        return new Response(
+            JSON.stringify({
+                message: `Deleted all blobs`
+            })
+        );
     } catch (e) {
         console.error(e);
         return new Response(

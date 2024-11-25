@@ -7,10 +7,11 @@ import Logo from '../components/Logo.astro';
 
 <div class="pb-3">
     <nav class="flex flex-wrap justify-between items-center">
+        <Image src={header_flower} alt="Flower" class="hidden md:block aspect-square w-24 items-center" />
         <a href="/" class="no-underline">
             <Logo />
         </a>
-        <Image src={header_flower} alt="Flower" class="aspect-square w-20 scale-x-[-1] scale-y-[-1]" />
+        <Image src={header_flower} alt="Flower" class="aspect-square w-20 md:w-24 scale-x-[-1] items-center" />
     </nav>
     <Image src={separator} alt="Golden styled separator" />
 </div>

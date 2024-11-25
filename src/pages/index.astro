@@ -2,52 +2,49 @@
 import Layout from '../layouts/Layout.astro';
 import { Image } from 'astro:assets';
 import miyus_fall_landscape from '../assets/miyus_fall_landscape.jpg';
-
-import { getStore } from '@netlify/blobs';
-
-//Get all images from the store
-/* const store = getStore('bg_wedding_photos');
-const imageList = await store.list();
-console.log(imageList);
-
-const imageUrls = imageList.blobs
-    .map((blob) => {
-        const image = store
-            .get(blob.key, { type: 'blob' })
-            .then((image) => {
-                return URL.createObjectURL(image);
-            })
-            .catch((error) => {
-                console.error(error);
-            });
-        return image;
-    })
-    .map((image) => image); */
 ---
 
+<style>
+    #Gallery {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1rem;
+        padding-top: 3rem;
+        align-items: center;
+    }
+
+    .grid-item {
+        width: 100%;
+        height: auto;
+    }
+</style>
+
 <Layout title="Wedding Photos">
-    <figure>
-        <Image src={miyus_fall_landscape} alt="Mia (dog) at the park sitting on fall leaves" class="w-full" />
-    </figure>
-    <p class="text-center pt-4">Thank you for coming to our wedding celebration. </p>
-    <p class="text-center pt-1 pb-2"> Pease share the best photos you took from the event</p>
+    <div class="md:w-[90%] mx-auto">
+        <figure>
+            <Image src={miyus_fall_landscape} alt="Mia at the park sitting on fall leaves" class="w-full" />
+        </figure>
 
-    <form class="flex justify-between items-center">
-        <input type="file" id="file" name="file" accept="image/*" required multiple class="w-64" />
-        <button type="submit" class="bg-[--orange-light] border-[0.5px] border-[--brown] rounded-md py-1 px-2 text-orange-950">Upload</button>
-    </form>
+        <p class="text-center text-lg pt-4">Thank you so much for coming to our wedding and making the day so wonderful! </p>
+        <p class="text-center text-lg pt-2"> Please share your favorite pictures from the event 😊</p>
 
-    <h2 class="text-center pt-5">Gallery</h2>
+        <form id="image-upload" class="flex justify-between items-center pt-4 md:w-[75%] mx-auto">
+            <input type="file" id="file" name="file" accept="image/*" required multiple class="w-auto" />
+            <button type="submit" class="bg-[--orange-light] border-[0.5px] border-[--brown] rounded-md py-1 px-2 text-orange-950">Upload</button>
+        </form>
 
-    <!--  <div id="Gallery">
-        {imageUrls.map((url) => <img src={url} alt="Wedding photo" />)}
-    </div> -->
+        <h2 class="text-center pt-6 underline text-3xl">Gallery</h2>
+
+        <div id="Gallery"> </div>
+    </div>
 </Layout>
 
 <script>
     document.querySelector('form').addEventListener('submit', function (event) {
         event.preventDefault();
         const fileInput = document.getElementById('file') as HTMLInputElement;
+
+        initializeUploadProgress(fileInput.files.length);
         for (let i = 0; i < fileInput.files.length; i++) {
             const file = fileInput.files[i];
             if (file) {
@@ -57,13 +54,41 @@ const imageUrls = imageList.blobs
                     const blob = new Blob([arrayBuffer], { type: file.type });
 
                     uploadBlob(blob).then(() => {
-                        console.log('Image uploaded');
+                        renderImage(blob);
+                        updateUploadProgress();
                     });
                 };
                 reader.readAsArrayBuffer(file);
             }
         }
     });
+
+    const initializeUploadProgress = (max: number) => {
+        const progressBar = document.createElement('progress');
+        progressBar.value = 0;
+        progressBar.max = max;
+        progressBar.style.width = '50%';
+        progressBar.style.height = '1rem';
+        progressBar.style.marginTop = '1rem';
+        progressBar.style.display = 'block';
+        progressBar.style.marginLeft = 'auto';
+        progressBar.style.marginRight = 'auto';
+
+        document.getElementById('image-upload').insertAdjacentElement('afterend', progressBar);
+    };
+
+    const updateUploadProgress = () => {
+        const progressBar = document.querySelector('progress');
+        progressBar.value = progressBar.value + 1;
+
+        if (progressBar.value === progressBar.max) {
+            progressBar.remove();
+            const uploadSuccess = document.createElement('p');
+            uploadSuccess.textContent = 'Upload successful!';
+            uploadSuccess.style.textAlign = 'center';
+            document.getElementById('image-upload').insertAdjacentElement('afterend', uploadSuccess);
+        }
+    };
 
     const uploadBlob = async (blob: Blob) => {
         const response = await fetch('/api/photos', {
@@ -76,22 +101,61 @@ const imageUrls = imageList.blobs
         }
     };
 
-    const requestImages = async (imageId) => {
+    const requestImages = async () => {
+        const response = await fetch('/api/photos', {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        const data: string[] = (await response.json()).keys;
+        if (data) {
+            data.splice(0, 10).forEach((imageId) => requestImage(imageId));
+            let isLoading = false;
+            window.addEventListener('scroll', async () => {
+                if (window.innerHeight + window.scrollY >= document.body.offsetHeight * 0.9 && !isLoading) {
+                    isLoading = true;
+                    const nextImages = data.splice(0, 10);
+                    for (const imageId of nextImages) {
+                        await requestImage(imageId);
+                    }
+                    isLoading = false;
+                }
+            });
+        }
+    };
+
+    const requestImage = async (imageId) => {
         const response = await fetch(`/api/photos?key=${imageId}`, {
             method: 'GET',
             headers: { 'Content-Type': 'application/json' }
         });
         const data = await response.blob();
-        console.log('blob data');
-        console.log(data);
 
-        //Display the image
         if (data) {
-            const image = document.createElement('img');
-            image.src = URL.createObjectURL(data);
-            image.width = 200;
-            image.height = 200;
-            document.getElementById('image').appendChild(image);
+            renderImage(data);
         }
     };
+
+    const renderImage = (image: Blob) => {
+        const img = document.createElement('img');
+        img.src = URL.createObjectURL(image);
+        img.className = 'grid-item';
+        const gallery = document.getElementById('Gallery');
+        gallery.appendChild(img);
+    };
+
+    requestImages();
+
+    // Cleanup for blobs
+    const gallery = document.getElementById('Gallery');
+    const images = gallery.getElementsByTagName('img');
+
+    // Cleanup URLs when images are removed/changed
+    const cleanup = () => {
+        Array.from(images).forEach((img) => {
+            URL.revokeObjectURL(img.src);
+        });
+    };
+
+    // Add cleanup on page unload
+    window.addEventListener('unload', cleanup);
 </script>

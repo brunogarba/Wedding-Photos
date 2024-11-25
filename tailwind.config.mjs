@@ -13,20 +13,5 @@ export default {
                 sans: ['Inter', ...defaultTheme.fontFamily.sans]
             }
         }
-    },
-    daisyui: {
-        themes: [
-            {
-                lofi: {
-                    ...require('daisyui/src/theming/themes')['lofi'],
-                    primary: '#F67280',
-                    'primary-content': '#1f1f1f',
-                    secondary: '#C06C84',
-                    info: '#F67280',
-                    'info-content': '#1f1f1f'
-                }
-            }
-        ]
-    },
-    plugins: [require('daisyui')]
+    }
 };

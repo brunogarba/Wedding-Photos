@@ -7,15 +7,10 @@ import miyus_fall_landscape from '../assets/miyus_fall_landscape.jpg';
 <style>
     #Gallery {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(40%, 1fr));
         gap: 1rem;
         padding-top: 3rem;
         align-items: center;
-    }
-
-    .grid-item {
-        width: 100%;
-        height: auto;
     }
 </style>
 
@@ -29,7 +24,7 @@ import miyus_fall_landscape from '../assets/miyus_fall_landscape.jpg';
         <p class="text-center text-lg pt-2"> Please share your favorite pictures from the event 😊</p>
 
         <form id="image-upload" class="flex justify-between items-center pt-4 md:w-[75%] mx-auto">
-            <input type="file" id="file" name="file" accept="image/*" required multiple class="w-[75%]" />
+            <input type="file" id="file" name="file" accept="image/*" required multiple class="w-[70%]" />
             <button type="submit" class="bg-[--orange-light] border-[0.5px] border-[--brown] rounded-md py-1 px-2 text-orange-950">Upload</button>
         </form>
 
@@ -138,7 +133,7 @@ import miyus_fall_landscape from '../assets/miyus_fall_landscape.jpg';
     const renderImage = (image: Blob) => {
         const img = document.createElement('img');
         img.src = URL.createObjectURL(image);
-        img.className = 'grid-item';
+        img.className = 'grid-item w-[100%] h-auto';
         const gallery = document.getElementById('Gallery');
         gallery.appendChild(img);
     };

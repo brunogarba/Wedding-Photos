@@ -60,15 +60,27 @@ export const DELETE: APIRoute = async (context) => {
             );
         }
 
-        for (const blob of blobStore.blobs) {
-            await getStore('bg_wedding_photos').delete(blob.key);
-        }
+        const urlParams = new URL(context.url);
+        const key = urlParams.searchParams.get('key');
+        if (key) {
+            await getStore('bg_wedding_photos').delete(key);
 
-        return new Response(
-            JSON.stringify({
-                message: `Deleted all blobs`
-            })
-        );
+            return new Response(
+                JSON.stringify({
+                    message: `Deleted blob "${key}"`
+                })
+            );
+        } else {
+            for (const blob of blobStore.blobs) {
+                await getStore('bg_wedding_photos').delete(blob.key);
+            }
+
+            return new Response(
+                JSON.stringify({
+                    message: `Deleted all blobs`
+                })
+            );
+        }
     } catch (e) {
         console.error(e);
         return new Response(

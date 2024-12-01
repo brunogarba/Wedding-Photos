@@ -2,6 +2,13 @@
 import Layout from '../layouts/Layout.astro';
 import { Image } from 'astro:assets';
 import miyus_fall_landscape from '../assets/miyus_fall_landscape.jpg';
+import { ImageUploader } from '../components/imageUploader';
+
+function onImageload(ev) {
+    console.log('Image loaded');
+    console.log(ev);
+    return 'asd';
+}
 ---
 
 <style>
@@ -23,134 +30,12 @@ import miyus_fall_landscape from '../assets/miyus_fall_landscape.jpg';
         <p class="text-center text-lg pt-4">Thank you so much for coming to our wedding and making the day so wonderful! </p>
         <p class="text-center text-lg pt-2"> Please share your favorite pictures from the event 😊</p>
 
-        <form id="image-upload" class="flex justify-between items-center pt-4 md:w-[75%] mx-auto">
-            <input type="file" id="file" name="file" accept="image/*" required multiple class="w-[70%]" />
-            <button type="submit" class="bg-[--orange-light] border-[0.5px] border-[--brown] rounded-md py-1 px-2 text-orange-950">Upload</button>
-        </form>
+        <ImageUploader client:load />
 
         <h2 class="text-center pt-6 underline text-3xl">Gallery</h2>
 
-        <div id="Gallery"> </div>
+        <div id="Gallery">
+            <Image src={'https://utfs.io/f/9av307E0NYoeAt87y9H3Kuc1FCYidwJRUqHolevG8BQjkyWM'} alt="miyus" width="200" height="200" />
+        </div>
     </div>
 </Layout>
-
-<script>
-    document.querySelector('form').addEventListener('submit', function (event) {
-        event.preventDefault();
-        const fileInput = document.getElementById('file') as HTMLInputElement;
-
-        initializeUploadProgress(fileInput.files.length);
-        for (let i = 0; i < fileInput.files.length; i++) {
-            const file = fileInput.files[i];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function (e) {
-                    const arrayBuffer = e.target.result;
-                    const blob = new Blob([arrayBuffer], { type: file.type });
-
-                    uploadBlob(blob).then(() => {
-                        renderImage(blob);
-                        updateUploadProgress();
-                    });
-                };
-                reader.readAsArrayBuffer(file);
-            }
-        }
-    });
-
-    const initializeUploadProgress = (max: number) => {
-        const progressBar = document.createElement('progress');
-        progressBar.value = 0;
-        progressBar.max = max;
-        progressBar.style.width = '50%';
-        progressBar.style.height = '1rem';
-        progressBar.style.marginTop = '1rem';
-        progressBar.style.display = 'block';
-        progressBar.style.marginLeft = 'auto';
-        progressBar.style.marginRight = 'auto';
-
-        document.getElementById('image-upload').insertAdjacentElement('afterend', progressBar);
-    };
-
-    const updateUploadProgress = () => {
-        const progressBar = document.querySelector('progress');
-        progressBar.value = progressBar.value + 1;
-
-        if (progressBar.value === progressBar.max) {
-            progressBar.remove();
-            const uploadSuccess = document.createElement('p');
-            uploadSuccess.textContent = 'Upload successful!';
-            uploadSuccess.style.textAlign = 'center';
-            document.getElementById('image-upload').insertAdjacentElement('afterend', uploadSuccess);
-        }
-    };
-
-    const uploadBlob = async (blob: Blob) => {
-        const response = await fetch('/api/photos', {
-            method: 'POST',
-            body: blob
-        });
-        const data = await response.json();
-        if (data.message) {
-            return data;
-        }
-    };
-
-    const requestImages = async () => {
-        const response = await fetch('/api/photos', {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' }
-        });
-        const data: string[] = (await response.json()).keys;
-        if (data) {
-            data.splice(0, 10).forEach((imageId) => requestImage(imageId));
-            let isLoading = false;
-            window.addEventListener('scroll', async () => {
-                if (window.innerHeight + window.scrollY >= document.body.offsetHeight * 0.9 && !isLoading) {
-                    isLoading = true;
-                    const nextImages = data.splice(0, 10);
-                    for (const imageId of nextImages) {
-                        await requestImage(imageId);
-                    }
-                    isLoading = false;
-                }
-            });
-        }
-    };
-
-    const requestImage = async (imageId) => {
-        const response = await fetch(`/api/photos?key=${imageId}`, {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' }
-        });
-        const data = await response.blob();
-
-        if (data) {
-            renderImage(data);
-        }
-    };
-
-    const renderImage = (image: Blob) => {
-        const img = document.createElement('img');
-        img.src = URL.createObjectURL(image);
-        img.className = 'grid-item w-[100%] h-auto';
-        const gallery = document.getElementById('Gallery');
-        gallery.appendChild(img);
-    };
-
-    requestImages();
-
-    // Cleanup for blobs
-    const gallery = document.getElementById('Gallery');
-    const images = gallery.getElementsByTagName('img');
-
-    // Cleanup URLs when images are removed/changed
-    const cleanup = () => {
-        Array.from(images).forEach((img) => {
-            URL.revokeObjectURL(img.src);
-        });
-    };
-
-    // Add cleanup on page unload
-    window.addEventListener('unload', cleanup);
-</script>

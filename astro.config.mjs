@@ -1,4 +1,4 @@
-import { defineConfig } from 'astro/config';
+import { defineConfig, envField } from 'astro/config';
 import netlify from '@astrojs/netlify';
 import tailwind from '@astrojs/tailwind';
 
@@ -8,9 +8,20 @@ import db from '@astrojs/db';
 
 // https://astro.build/config
 export default defineConfig({
-    integrations: [tailwind({
-        applyBaseStyles: false
-    }), react(), db()],
-    output: 'hybrid',
-    adapter: netlify()
+    integrations: [
+        tailwind({
+            applyBaseStyles: false
+        }),
+        react(),
+        db()
+    ],
+    output: 'server',
+    adapter: netlify(),
+    experimental: {
+        env: {
+            schema: {
+                UPLOADTHING_TOKEN: envField.string({ context: 'server', access: 'secret' })
+            }
+        }
+    }
 });

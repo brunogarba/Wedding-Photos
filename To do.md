@@ -1,0 +1,7 @@
+- Create database to store the images id and metadata of the image
+  - especially file format for heic handling
+  - date of upload for rendering in order
+- Handle heic files render on client-side
+- Opened image interface
+- Download option?
+- Likes option? using database
